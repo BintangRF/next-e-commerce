@@ -8,18 +8,22 @@ import { useCheckout } from "@/hooks/useCheckout";
 import { showSwal } from "@/components/Alert";
 
 export function usePayment() {
-  const {
-    clearCart,
-    transactions,
-    addTransaction,
-    updateTransaction,
-    cart,
-    user,
-  } = useStore();
-  const router = useRouter();
+  const { clearCart, addTransaction, updateTransaction, cart, user } =
+    useStore();
   const { mutate } = useCheckout();
 
+  /**
+   * currentPayment = transaksi yang sedang berlangsung (sementara)
+   * sebelum benar-benar masuk ke daftar transaksi (transactions).
+   * isinya data: id, orderId, items, total, status sementara, snapToken.
+   *
+   * setCurrentPayment = setter untuk mengubah/menghapus currentPayment.
+   */
   const payWithSnap = (snapToken: string, orderId: string) => {
+    const currentPayment = useStore.getState().currentPayment;
+    const setCurrentPayment = useStore.getState().setCurrentPayment;
+
+    // Pastikan Snap JS tersedia
     if (!window.snap)
       return showSwal({
         type: "info",
@@ -28,28 +32,49 @@ export function usePayment() {
         text: "Pembayaran sedang tidak bisa dilakukan",
       });
 
+    // Buka popup Snap Payment
     window.snap.pay(snapToken, {
+      // ✅ Jika pembayaran sukses
       onSuccess: () => {
-        updateTransaction(orderId, "success");
-        clearCart();
-        window.location.href = "/transactions";
+        if (currentPayment) {
+          addTransaction({ ...currentPayment, status: "success" });
+          setCurrentPayment(null);
+        } else {
+          updateTransaction(orderId, "success");
+        }
+        clearCart(); // kosongkan keranjang setelah berhasil
+        window.location.href = "/transactions"; // redirect ke history transaksi
       },
+      // 🕒 Jika masih menunggu pembayaran (pending)
       onPending: () => {
-        updateTransaction(orderId, "pending");
-        clearCart();
+        if (currentPayment) {
+          addTransaction({ ...currentPayment, status: "pending" });
+          setCurrentPayment(null);
+          clearCart();
+        }
         window.location.href = "/transactions";
       },
+      // ❌ Jika gagal/error
       onError: () => {
         updateTransaction(orderId, "cancel");
-        clearCart();
+        setCurrentPayment(null);
         window.location.href = "/transactions";
       },
+      // ⚠️ Jika user menutup popup tanpa bayar
       onClose: () => {
         console.log("Snap modal ditutup, token tetap ada");
+        setCurrentPayment(null);
       },
     });
   };
 
+  /**
+   * handleCheckout = fungsi utama untuk memulai proses checkout
+   * - validasi user login
+   * - request token + orderId dari backend (mutate)
+   * - simpan transaksi sementara ke currentPayment
+   * - jalankan Snap popup via payWithSnap
+   */
   const handleCheckout = (total: number) => {
     if (!total) return;
     if (!user)
@@ -68,7 +93,8 @@ export function usePayment() {
       },
       {
         onSuccess: (res) => {
-          addTransaction({
+          // Simpan transaksi sementara (currentPayment) agar bisa diproses
+          useStore.getState().setCurrentPayment({
             id: uuidv4(),
             orderId: res.orderId,
             items: cart,
@@ -78,6 +104,7 @@ export function usePayment() {
             snapToken: res.snapToken,
           });
 
+          // Buka Snap Payment
           payWithSnap(res.snapToken, res.orderId);
         },
         onError: (err) => {
@@ -93,6 +120,11 @@ export function usePayment() {
     );
   };
 
+  /**
+   * cancelTransaction = membatalkan transaksi yang statusnya masih pending.
+   * - hanya bisa cancel transaksi dengan status pending
+   * - hapus snapToken supaya tidak bisa dipakai lagi
+   */
   const cancelTransaction = (orderId: string) => {
     const tx = useStore
       .getState()

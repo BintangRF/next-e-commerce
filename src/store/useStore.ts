@@ -30,11 +30,13 @@ type StoreProps = {
   user: UserProps | null;
   cart: CartItemProps[];
   transactions: TransactionProps[];
+  currentPayment: TransactionProps | null;
   setUser: (user: UserProps | null) => void;
   addToCart: (item: CartItemProps) => void;
   removeFromCart: (id: number) => void;
   updateQty: (id: number, qty: number) => void;
   clearCart: () => void;
+  setCurrentPayment: (tx: TransactionProps | null) => void;
   addTransaction: (tx: TransactionProps) => void;
   updateTransaction: (orderId: string, status: TxStatus) => void;
 };
@@ -45,6 +47,7 @@ export const useStore = create<StoreProps>()(
       user: null,
       cart: [],
       transactions: [],
+      currentPayment: null,
       setUser: (user) => set({ user }),
       addToCart: (item) =>
         set((state) => {
@@ -52,7 +55,10 @@ export const useStore = create<StoreProps>()(
 
           if (idx !== -1) {
             const updated = [...state.cart];
-            updated[idx] = { ...updated[idx], quantity: updated[idx].quantity };
+            updated[idx] = {
+              ...updated[idx],
+              quantity: updated[idx].quantity + item.quantity,
+            };
             return { cart: updated };
           }
 
@@ -65,6 +71,7 @@ export const useStore = create<StoreProps>()(
           cart: s.cart.map((i) => (i.id === id ? { ...i, quantity } : i)),
         })),
       clearCart: () => set({ cart: [] }),
+      setCurrentPayment: (tx) => set({ currentPayment: tx }),
       addTransaction: (tx) =>
         set((s) => ({ transactions: [tx, ...s.transactions] })),
       updateTransaction: (orderId, status) =>
@@ -81,6 +88,7 @@ export const useStore = create<StoreProps>()(
         user: state.user,
         cart: state.cart,
         transactions: state.transactions,
+        currentPayment: state.currentPayment,
       }),
     }
   )

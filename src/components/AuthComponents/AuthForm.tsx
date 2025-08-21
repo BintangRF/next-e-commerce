@@ -29,14 +29,13 @@ export const AuthForm = ({ mode }: { mode: "login" | "register" }) => {
 
     // login
     const raw = localStorage.getItem("_demo_user");
-    if (!raw) return;
-
-    showSwal({
-      type: "info",
-      title: "Informasi",
-      icon: "warning",
-      text: "⚠️ Data user tidak tersedia. Silakan Register terlebih dahulu.",
-    });
+    if (!raw)
+      return showSwal({
+        type: "info",
+        title: "Informasi",
+        icon: "warning",
+        text: "⚠️ Data user tidak tersedia. Silakan Register terlebih dahulu.",
+      });
 
     const saved = JSON.parse(raw);
 
