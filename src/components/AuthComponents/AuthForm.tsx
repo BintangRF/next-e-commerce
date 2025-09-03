@@ -62,16 +62,32 @@ export const AuthForm = ({ mode }: { mode: "login" | "register" }) => {
           placeholder="Enter username"
           label="Username"
           name="username"
+          rules={{ required: "Username wajib diisi" }}
         />
       )}
 
-      <FormInputs placeholder="Enter email" label="Email" name="email" />
+      <FormInputs
+        placeholder="Enter email"
+        label="Email"
+        name="email"
+        rules={{
+          required: "Email wajib diisi",
+          pattern: {
+            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            message: "Format email tidak valid",
+          },
+        }}
+      />
 
       <FormInputs
         placeholder="Enter password"
         label="Password"
         name="password"
         type="password"
+        rules={{
+          required: "Password wajib diisi",
+          minLength: { value: 8, message: "Password minimal 8 karakter" },
+        }}
       />
 
       <button
