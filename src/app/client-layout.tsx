@@ -3,9 +3,12 @@
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { QueryProvider } from "@/lib/QueryProvider";
+import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 
 export const ClientLayout = ({ children }: { children: React.ReactNode }) => {
+  const pathname = usePathname();
+
   // Load Midtrans snap.js
   useEffect(() => {
     const script = document.createElement("script");
@@ -19,9 +22,9 @@ export const ClientLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <QueryProvider>
-      <Navbar />
+      {pathname !== "/payment-notification" && <Navbar />}
       <div>{children}</div>
-      <Footer />
+      {pathname !== "/payment-notification" && <Footer />}
     </QueryProvider>
   );
 };

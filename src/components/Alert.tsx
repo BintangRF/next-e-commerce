@@ -11,6 +11,8 @@ export interface SwalOptions {
   icon?: "success" | "error" | "warning" | "info" | "question";
   confirmButtonText?: string;
   cancelButtonText?: string;
+  onConfirm?: () => void;
+  onClose?: () => void;
 }
 
 export const showSwal = async (
@@ -23,6 +25,8 @@ export const showSwal = async (
     icon,
     confirmButtonText,
     cancelButtonText,
+    onConfirm,
+    onClose,
   } = options;
 
   if (type === "info") {
@@ -31,9 +35,10 @@ export const showSwal = async (
       text,
       icon: icon || "info",
       confirmButtonText: confirmButtonText || "OK",
-      timer: 2000,
-      timerProgressBar: true,
+      // timer: 2000,
+      // timerProgressBar: true,
     });
+    if (onClose) onClose();
     return;
   }
 
@@ -47,6 +52,12 @@ export const showSwal = async (
       cancelButtonText: cancelButtonText || "Batal",
     });
 
-    return result.isConfirmed;
+    if (result.isConfirmed) {
+      if (onConfirm) onConfirm();
+      return true;
+    } else {
+      if (onClose) onClose();
+      return false;
+    }
   }
 };

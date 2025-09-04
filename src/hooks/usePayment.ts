@@ -2,7 +2,6 @@
 "use client";
 
 import { v4 as uuidv4 } from "uuid";
-import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { useCheckout } from "@/hooks/useCheckout";
 import { showSwal } from "@/components/Alert";
@@ -33,39 +32,48 @@ export function usePayment() {
       });
 
     // Buka popup Snap Payment
-    window.snap.pay(snapToken, {
-      // ✅ Jika pembayaran sukses
-      onSuccess: () => {
-        if (currentPayment) {
-          addTransaction({ ...currentPayment, status: "success" });
+    window.snap.pay(
+      snapToken,
+      {
+        // ✅ Jika pembayaran sukses
+        onSuccess: () => {
+          if (currentPayment) {
+            addTransaction({ ...currentPayment, status: "settlement" });
+            setCurrentPayment(null);
+          } else {
+            updateTransaction(orderId, "settlement");
+          }
+          clearCart(); // kosongkan keranjang setelah berhasil
+        },
+        // 🕒 Jika masih menunggu pembayaran (pending)
+        onPending: () => {
+          if (currentPayment) {
+            addTransaction(currentPayment);
+            setCurrentPayment(null);
+            clearCart();
+          }
+        },
+        // ❌ Jika gagal/error
+        onError: () => {
+          if (currentPayment) {
+            addTransaction({ ...currentPayment, status: "failed" });
+          } else {
+            updateTransaction(orderId, "failed");
+          }
+
           setCurrentPayment(null);
-        } else {
-          updateTransaction(orderId, "success");
-        }
-        clearCart(); // kosongkan keranjang setelah berhasil
-        window.location.href = "/transactions"; // redirect ke history transaksi
-      },
-      // 🕒 Jika masih menunggu pembayaran (pending)
-      onPending: () => {
-        if (currentPayment) {
-          addTransaction({ ...currentPayment, status: "pending" });
+        },
+        // ⚠️ Jika user menutup popup tanpa bayar
+        onClose: () => {
+          console.log("Snap modal ditutup, token tetap ada");
           setCurrentPayment(null);
-          clearCart();
-        }
-        window.location.href = "/transactions";
+        },
       },
-      // ❌ Jika gagal/error
-      onError: () => {
-        updateTransaction(orderId, "cancel");
-        setCurrentPayment(null);
-        window.location.href = "/transactions";
-      },
-      // ⚠️ Jika user menutup popup tanpa bayar
-      onClose: () => {
-        console.log("Snap modal ditutup, token tetap ada");
-        setCurrentPayment(null);
-      },
-    });
+      {
+        skipOrderSummary: true,
+        autoClose: true,
+      }
+    );
   };
 
   /**
@@ -75,8 +83,8 @@ export function usePayment() {
    * - simpan transaksi sementara ke currentPayment
    * - jalankan Snap popup via payWithSnap
    */
-  const handleCheckout = (total: number) => {
-    if (!total) return;
+  const handleCheckout = () => {
+    if (!cart.length) return;
     if (!user)
       return showSwal({
         type: "info",
@@ -87,18 +95,21 @@ export function usePayment() {
 
     mutate(
       {
-        total: Math.round(total),
+        items: cart.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+        })),
         username: user?.username ?? "Guest",
         email: user?.email ?? "guest@example.com",
       },
       {
         onSuccess: (res) => {
-          // Simpan transaksi sementara (currentPayment) agar bisa diproses
+          // Simpan transaksi sementara (currentPayment) dengan status "pending" agar bisa diproses
           useStore.getState().setCurrentPayment({
             id: uuidv4(),
             orderId: res.orderId,
             items: cart,
-            total,
+            total: res.total,
             status: "pending",
             createdAt: Date.now(),
             snapToken: res.snapToken,
@@ -145,8 +156,6 @@ export function usePayment() {
         icon: "warning",
         text: "Hanya transaksi pending yang bisa dibatalkan.",
       });
-
-    if (tx) tx.snapToken = undefined;
 
     updateTransaction(orderId, "cancel");
   };

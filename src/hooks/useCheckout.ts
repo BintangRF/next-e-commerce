@@ -3,8 +3,13 @@
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 
+type ItemProps = {
+  id: string | number;
+  quantity: number;
+};
+
 type CheckoutPayload = {
-  total: number;
+  items: ItemProps[];
   username: string;
   email: string;
 };
@@ -12,6 +17,7 @@ type CheckoutPayload = {
 type CheckoutResponse = {
   snapToken: string;
   orderId: string;
+  total: number;
 };
 
 const checkoutRequest = async (

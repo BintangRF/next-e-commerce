@@ -52,7 +52,7 @@ export const CartItem = ({ id, image, title, price, quantity }: Props) => {
 
       <button
         onClick={() => removeFromCart(id)}
-        className="px-3 py-1 bg-rose-600 rounded-xl"
+        className="px-3 py-1 bg-rose-600 rounded-xl text-slate-100"
       >
         Remove
       </button>

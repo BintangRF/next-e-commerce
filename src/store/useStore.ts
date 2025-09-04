@@ -14,7 +14,7 @@ export type UserProps = {
   email: string;
 };
 
-export type TxStatus = "pending" | "success" | "cancel";
+export type TxStatus = "pending" | "settlement" | "cancel" | "failed";
 
 export type TransactionProps = {
   id: string;

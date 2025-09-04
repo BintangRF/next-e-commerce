@@ -11,7 +11,7 @@ export const TransactionCard = ({ tx }: { tx: TransactionProps }) => {
         <span
           className={
             "px-2 py-1 rounded text-xs text-white font-semibold " +
-            (tx.status === "success"
+            (tx.status === "settlement"
               ? "bg-emerald-600"
               : tx.status === "pending"
               ? "bg-amber-600"

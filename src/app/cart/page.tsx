@@ -45,10 +45,7 @@ export default function CartPage() {
 
             {/* Summary */}
             <div className="bg-white rounded-2xl shadow-md p-4 md:p-6 h-fit sticky top-24">
-              <CartSummary
-                total={total}
-                checkout={() => handleCheckout(total)}
-              />
+              <CartSummary total={total} checkout={() => handleCheckout()} />
             </div>
           </div>
         )}
