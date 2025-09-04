@@ -9,7 +9,7 @@ import { showSwal } from "@/components/Alert";
 export function usePayment() {
   const { clearCart, addTransaction, updateTransaction, cart, user } =
     useStore();
-  const { mutate } = useCheckout();
+  const { mutate, isPending } = useCheckout();
 
   /**
    * currentPayment = transaksi yang sedang berlangsung (sementara)
@@ -160,5 +160,5 @@ export function usePayment() {
     updateTransaction(orderId, "cancel");
   };
 
-  return { handleCheckout, payWithSnap, cancelTransaction };
+  return { handleCheckout, payWithSnap, cancelTransaction, isPending };
 }

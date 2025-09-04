@@ -11,7 +11,6 @@ import { usePayment } from "@/hooks/usePayment";
 export default function CartPage() {
   const { cart } = useStore();
   const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-  const { handleCheckout } = usePayment();
 
   return (
     <Section>
@@ -45,7 +44,7 @@ export default function CartPage() {
 
             {/* Summary */}
             <div className="bg-white rounded-2xl shadow-md p-4 md:p-6 h-fit sticky top-24">
-              <CartSummary total={total} checkout={() => handleCheckout()} />
+              <CartSummary total={total} />
             </div>
           </div>
         )}
