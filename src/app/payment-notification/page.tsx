@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default function PaymentNotificationPage() {
   const searchParams = useSearchParams();
@@ -34,15 +35,17 @@ export default function PaymentNotificationPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen text-center">
-      <h1 className={`text-2xl font-bold mb-4 ${color}`}>{title}</h1>
-      <p className="mb-6">{message}</p>
-      <Link
-        href="/transactions"
-        className="px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Lihat Transaksi
-      </Link>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="flex flex-col items-center justify-center h-screen text-center">
+        <h1 className={`text-2xl font-bold mb-4 ${color}`}>{title}</h1>
+        <p className="mb-6">{message}</p>
+        <Link
+          href="/transactions"
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Lihat Transaksi
+        </Link>
+      </div>
+    </Suspense>
   );
 }
